@@ -1,8 +1,38 @@
 # MemMap Explorer
 
+[![GitHub stars](https://img.shields.io/github/stars/Zepp-Hanzj/MemMapExplorer?style=for-the-badge)](https://github.com/Zepp-Hanzj/MemMapExplorer/stargazers)
+[![GitHub release](https://img.shields.io/github/v/release/Zepp-Hanzj/MemMapExplorer?style=for-the-badge)](https://github.com/Zepp-Hanzj/MemMapExplorer/releases)
+[![License: GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=for-the-badge)](LICENSE)
+
+**WinDirStat-style treemap UI + MAP/ELF symbol and memory layout analysis for Windows.**
+
+If this project helps you, please consider giving it a **Star**.
+
+[Download](https://github.com/Zepp-Hanzj/MemMapExplorer/releases) · [Screenshots](#screenshots) · [中文](#中文) · [English](#english)
+
 [English](#english) | [中文](#中文)
 
 ---
+
+## Why MemMap Explorer?
+
+- Familiar **WinDirStat-style** tree + treemap workflow
+- Added **MAP / ELF import** for binary and memory-layout analysis
+- Inspect **regions, sections, objects, and symbols** in one UI
+- Show structured metadata and **DWARF source line** details when available
+- Useful for **embedded**, **firmware**, **reverse-engineering**, and **binary size** analysis
+
+## Quick comparison
+
+| Feature | WinDirStat | MemMap Explorer |
+| --- | ---: | ---: |
+| Disk usage treemap | ✅ | ✅ |
+| File tree navigation | ✅ | ✅ |
+| MAP import | ❌ | ✅ |
+| ELF parsing | ❌ | ✅ |
+| Region / section / symbol details | ❌ | ✅ |
+| DWARF line mapping | ❌ | ✅ |
+| Imported analysis details pane | ❌ | ✅ |
 
 ## 中文
 
@@ -20,6 +50,12 @@ MemMap Explorer 适合用于可视化分析大型结构化数据，主要用途�
 - 在右侧详情面板查看结构化元数据
 - 在可用时关联地址、大小、属性和源码行信息
 - 导出并重新打开分析结果
+
+### 为什么值得关注
+
+- 如果你喜欢 WinDirStat 的交互方式，但又需要分析 **MAP / ELF / 符号 / 内存区域**，这个项目更合适
+- 如果你在做 **嵌入式固件、链接产物、二进制体积分析、逆向定位**，这个项目更直接
+- 如果这个项目对你有帮助，欢迎点一个 **Star**
 
 ### 主要特性
 
@@ -116,6 +152,12 @@ It can be used to:
 - inspect symbol metadata in a structured details pane
 - correlate imported nodes with addresses, sizes, attributes, and source lines when available
 - export and reopen collected results in supported formats
+
+### Why it may be worth a Star
+
+- It keeps the familiar WinDirStat interaction model while extending it to **MAP / ELF / symbol / memory-region** analysis
+- It is useful for **embedded**, **firmware**, **binary size**, and **reverse-engineering** workflows
+- If it saves you time, please consider giving the repository a **Star**
 
 ### Main features
 
