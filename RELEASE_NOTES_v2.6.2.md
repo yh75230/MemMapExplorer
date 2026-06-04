@@ -1,8 +1,8 @@
-﻿# MemMap Explorer v2.6.2 - First public derivative release
+# MemMap Explorer v2.6.2 - First public derivative release
 
 ## Summary
 
-This is the first release of **MemMap Explorer**, a derivative project based on WinDirStat and extended for imported memory-layout exploration.
+This is the first release of **MemMap Explorer**, a derivative project based on WinDirStat and focused on MAP/ELF-driven memory-layout exploration.
 
 ## Highlights
 
@@ -12,7 +12,6 @@ This is the first release of **MemMap Explorer**, a derivative project based on 
 - Added structured details pane for imported analysis nodes
 - Added DWARF `.debug_line` parsing support
 - Added region-selection dialog for imported memory data
-- Fixed stale-pointer cleanup issues in the largest-files view
 - Updated project and source entry points from legacy WinDirStat naming toward MemMap Explorer naming
 
 ## Upstream acknowledgement
