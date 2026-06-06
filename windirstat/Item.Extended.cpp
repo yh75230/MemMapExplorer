@@ -17,6 +17,37 @@
 
 #include "pch.h"
 #include "Item.h"
+#include "MapLoader.h"
+
+namespace
+{
+constexpr double kTreemapPaletteBrightness = 0.6;
+
+[[nodiscard]] COLORREF HashSectionColor(const std::wstring_view sectionName)
+{
+    if (sectionName.empty())
+    {
+        return RGB(0, 0, 0);
+    }
+
+    const std::size_t hash = std::hash<std::wstring_view>{}(sectionName);
+    constexpr std::array<COLORREF, 12> palette = {
+        RGB(0x4E, 0x79, 0xA7),
+        RGB(0xF2, 0x8E, 0x2B),
+        RGB(0xE1, 0x57, 0x59),
+        RGB(0x76, 0xB7, 0xB2),
+        RGB(0x59, 0xA1, 0x4F),
+        RGB(0xED, 0xC9, 0x49),
+        RGB(0xAF, 0x7A, 0xA1),
+        RGB(0xFF, 0x9D, 0xA7),
+        RGB(0x9C, 0x75, 0x5F),
+        RGB(0xBA, 0xB0, 0xAC),
+        RGB(0x49, 0xA0, 0xD8),
+        RGB(0x8C, 0xC6, 0x4B)
+    };
+    return CColorSpace::MakeBrightColor(palette[hash % palette.size()], kTreemapPaletteBrightness);
+}
+}
 
 static void CloseBCryptAlgHandle(BCRYPT_ALG_HANDLE h) noexcept { BCryptCloseAlgorithmProvider(h, 0); }
 
@@ -1082,7 +1113,16 @@ COLORREF CItem::GetGraphColor() const
 
     if (IsTypeOrFlag(IT_FILE))
     {
+        if (const auto sectionName = GetMapItemSectionName(this); !sectionName.empty())
+        {
+            return HashSectionColor(sectionName);
+        }
         return CDirStatDoc::Get()->GetCushionColor(GetExtension());
+    }
+
+    if (const auto sectionName = GetMapItemSectionName(this); !sectionName.empty())
+    {
+        return HashSectionColor(sectionName);
     }
 
     return RGB(0, 0, 0);

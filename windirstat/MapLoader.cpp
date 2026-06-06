@@ -20,6 +20,7 @@
 namespace
 {
 std::unordered_map<const CItem*, MapItemDetails> g_mapItemDetails;
+std::unordered_map<const CItem*, std::wstring> g_mapItemSections;
 
 constexpr wchar_t MEMORY_CONFIG_HEADER[] = L"Memory Configuration";
 constexpr wchar_t MAP_HEADER[] = L"Linker script and memory map";
@@ -627,6 +628,7 @@ void RemoveMapItemDetails(const CItem* root)
         const auto* current = stack.back();
         stack.pop_back();
         g_mapItemDetails.erase(current);
+        g_mapItemSections.erase(current);
 
         if (current->IsLeaf())
         {
@@ -1991,6 +1993,21 @@ const MapItemDetails* GetMapItemDetails(const CItem* item)
     return nullptr;
 }
 
+std::wstring GetMapItemSectionName(const CItem* item)
+{
+    if (item == nullptr)
+    {
+        return {};
+    }
+
+    if (const auto it = g_mapItemSections.find(item); it != g_mapItemSections.end())
+    {
+        return it->second;
+    }
+
+    return {};
+}
+
 void RemoveMapItemDetails(const CItem* root)
 {
     if (root == nullptr)
@@ -2091,6 +2108,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
     auto buildSectionNode = [&](CItem* regionNode, const OutputSection& section)
     {
         auto* sectionNode = CreateDirectoryChild(regionNode, section.name);
+        g_mapItemSections[sectionNode] = section.name;
         MapItemDetails sectionDetails{ .title = section.name };
         AddDetailField(sectionDetails, L"Section", section.name);
         AddDetailField(sectionDetails, L"Logical address", FormatHexValue(section.address));
@@ -2205,6 +2223,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
         {
             (void)ignoredSize;
             auto* libraryNode = CreateDirectoryChild(sectionNode, libraryName);
+            g_mapItemSections[libraryNode] = section.name;
             auto objectBuckets = objectsByLibrary[libraryName];
             std::ranges::sort(objectBuckets, [](const ObjectBucket* left, const ObjectBucket* right)
             {
@@ -2215,6 +2234,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
             for (const auto* bucket : objectBuckets)
             {
                 auto* objectNode = CreateDirectoryChild(libraryNode, bucket->object);
+                g_mapItemSections[objectNode] = section.name;
                 MapItemDetails objectDetails{ .title = bucket->object };
                 AddDetailField(objectDetails, L"Library", bucket->library);
                 AddDetailField(objectDetails, L"Object", bucket->object);
@@ -2234,6 +2254,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
                     for (const auto& symbol : symbolsForObject)
                     {
                         auto* symbolNode = CreateLeafChild(objectNode, MakeSymbolLeafName(symbol), symbol.size);
+                        g_mapItemSections[symbolNode] = section.name;
                         const auto debugInfo = GetSymbolDebugInfo(symbol, elfData);
                         MapItemDetails symbolDetails{ .title = symbol.name };
                         AddDetailField(symbolDetails, L"Name", symbol.name);
@@ -2265,19 +2286,22 @@ CItem* LoadMapResults(const std::wstring& mapPath,
                     if (bucket->symbols.empty())
                     {
                         const auto label = MakeContributionLeafName(*contribution);
-                        (void)CreateLeafChild(objectNode, label, contribution->size);
+                        auto* leafNode = CreateLeafChild(objectNode, label, contribution->size);
+                        g_mapItemSections[leafNode] = section.name;
                         addedContributionLeaf = true;
                     }
                     else if (remainder > 0)
                     {
                         const auto label = MakeResidualLeafName(contribution->subsection, contribution->address);
-                        (void)CreateLeafChild(objectNode, label, remainder);
+                        auto* leafNode = CreateLeafChild(objectNode, label, remainder);
+                        g_mapItemSections[leafNode] = section.name;
                     }
                 }
 
                 if (!addedContributionLeaf && bucket->symbols.empty() && bucket->contributions.empty() && bucket->value > 0)
                 {
-                    (void)CreateLeafChild(objectNode, L"[object payload].payload", bucket->value);
+                    auto* leafNode = CreateLeafChild(objectNode, L"[object payload].payload", bucket->value);
+                    g_mapItemSections[leafNode] = section.name;
                 }
             }
         }
@@ -2299,8 +2323,10 @@ CItem* LoadMapResults(const std::wstring& mapPath,
             }
 
             auto* objectNode = CreateDirectoryChild(libraryNode, L"[section payload]");
+            g_mapItemSections[objectNode] = section.name;
             const std::wstring leafName = MakeSectionResidualLeafName(section.name);
-            (void)CreateLeafChild(objectNode, leafName, section.size - accounted);
+            auto* leafNode = CreateLeafChild(objectNode, leafName, section.size - accounted);
+            g_mapItemSections[leafNode] = section.name;
         }
     };
 

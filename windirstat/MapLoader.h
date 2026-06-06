@@ -45,3 +45,4 @@ CItem* LoadMapResults(const std::wstring& mapPath,
 void ClearMapItemDetails();
 const MapItemDetails* GetMapItemDetails(const CItem* item);
 void RemoveMapItemDetails(const CItem* root);
+std::wstring GetMapItemSectionName(const CItem* item);

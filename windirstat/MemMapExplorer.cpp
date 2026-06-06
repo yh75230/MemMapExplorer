@@ -504,93 +504,43 @@ void CDirStatApp::OnAppAbout()
 
 void CDirStatApp::OnFileOpen()
 {
-    std::array<wchar_t, 8192> fileBuffer{};
-    constexpr wchar_t fileSelectString[] =
-        L"Analysis Files (*.map;*.elf;*.csv;*.json)|*.map;*.elf;*.csv;*.json|"
+    constexpr wchar_t mapFileSelectString[] =
         L"Map Files (*.map)|*.map|"
-        L"ELF Files (*.elf)|*.elf|"
-        L"Saved Results (*.csv;*.json)|*.csv;*.json|"
         L"All Files (*.*)|*.*||";
-    CFileDialog dlg(TRUE, L"map", nullptr,
-        OFN_EXPLORER | OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_ALLOWMULTISELECT,
-        fileSelectString);
-    dlg.GetOFN().lpstrFile = fileBuffer.data();
-    dlg.GetOFN().nMaxFile = static_cast<DWORD>(fileBuffer.size());
+    constexpr wchar_t elfFileSelectString[] =
+        L"ELF Files (*.elf;*.)|*.elf;*.|"
+        L"All Files (*.*)|*.*||";
+    constexpr wchar_t mapDialogTitle[] = L"Step 1/2: Select MAP file";
+    constexpr wchar_t elfDialogTitle[] = L"Step 2/2: Select ELF file (optional, supports extensionless executables)";
 
-    if (dlg.DoModal() != IDOK)
+    CFileDialog mapDlg(TRUE, L"map", nullptr,
+        OFN_EXPLORER | OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST,
+        mapFileSelectString);
+    mapDlg.GetOFN().lpstrTitle = mapDialogTitle;
+
+    if (mapDlg.DoModal() != IDOK)
     {
         return;
     }
 
-    std::vector<std::wstring> selectedPaths;
-    for (POSITION pos = dlg.GetStartPosition(); pos != nullptr; )
-    {
-        selectedPaths.emplace_back(dlg.GetNextPathName(pos).GetString());
-    }
-
-    std::optional<std::wstring> mapPath;
+    const std::wstring mapPath = mapDlg.GetPathName().GetString();
     std::optional<std::wstring> elfPath;
-    std::optional<std::wstring> resultsPath;
-    for (const auto& path : selectedPaths)
+
+    const auto mapFilesystemPath = std::filesystem::path(mapPath);
+    const auto defaultElfPath = mapFilesystemPath.parent_path() / mapFilesystemPath.stem();
+    CFileDialog elfDlg(TRUE, L"elf", defaultElfPath.wstring().c_str(),
+        OFN_EXPLORER | OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST,
+        elfFileSelectString);
+    elfDlg.GetOFN().lpstrTitle = elfDialogTitle;
+
+    if (elfDlg.DoModal() == IDOK)
     {
-        if (HasExtensionInsensitive(path, L".map"))
-        {
-            if (mapPath.has_value())
-            {
-                DisplayError(L"Select at most one .map file.");
-                return;
-            }
-            mapPath = path;
-        }
-        else if (HasExtensionInsensitive(path, L".elf"))
-        {
-            if (elfPath.has_value())
-            {
-                DisplayError(L"Select at most one .elf file.");
-                return;
-            }
-            elfPath = path;
-        }
-        else if (IsImportedResultsPath(path))
-        {
-            if (resultsPath.has_value() || selectedPaths.size() != 1)
-            {
-                DisplayError(L"Saved results must be opened on their own.");
-                return;
-            }
-            resultsPath = path;
-        }
-        else
-        {
-            DisplayError(L"Unsupported file type selected.");
-            return;
-        }
+        elfPath = elfDlg.GetPathName().GetString();
     }
 
     CItem* newroot = nullptr;
-    if (resultsPath.has_value())
     {
-        newroot = LoadImportedTree(*resultsPath);
-    }
-    else
-    {
-        if (!mapPath.has_value() && elfPath.has_value())
-        {
-            auto siblingMap = std::filesystem::path(*elfPath);
-            siblingMap.replace_extension(L".map");
-            if (std::filesystem::exists(siblingMap))
-            {
-                mapPath = siblingMap.wstring();
-            }
-        }
-
-        if (!mapPath.has_value())
-        {
-            DisplayError(L"Select a .map file, or choose an .elf together with its matching .map.");
-            return;
-        }
-
-        const auto regions = GetMapRegions(*mapPath);
+        const auto regions = GetMapRegions(mapPath);
         std::optional<std::wstring> selectedRegion;
         if (!regions.empty())
         {
@@ -602,12 +552,12 @@ void CDirStatApp::OnFileOpen()
             selectedRegion = regionDlg.GetSelectedRegion();
         }
 
-        newroot = LoadMapResults(*mapPath, elfPath, selectedRegion);
+        newroot = LoadMapResults(mapPath, elfPath, selectedRegion);
     }
 
     if (newroot == nullptr)
     {
-        DisplayError(L"Could not parse the selected analysis files.");
+        DisplayError(L"Could not parse the selected MAP/ELF files.");
         return;
     }
 
