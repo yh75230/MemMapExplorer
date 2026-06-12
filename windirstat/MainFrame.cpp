@@ -22,6 +22,9 @@
 #include "FileTreeView.h"
 #include "DrawTextCache.h"
 #include "ExtensionView.h"
+#include "DiffEngine.h"
+#include "MapLoader.h"
+#include "SelectRegionDlg.h"
 #include "PageAdvanced.h"
 #include "PageFiltering.h"
 #include "PageCleanups.h"
@@ -422,12 +425,15 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
     ON_COMMAND(ID_VIEW_LARGEST_FILES, &CMainFrame::OnViewLargestFiles)
     ON_COMMAND(ID_VIEW_DUPLICATE_FILES, &CMainFrame::OnViewDuplicateFiles)
     ON_COMMAND(ID_VIEW_SEARCH_RESULTS, &CMainFrame::OnViewSearchResults)
+    ON_COMMAND(ID_VIEW_DIFF, &CMainFrame::OnViewDiff)
     ON_COMMAND(ID_VIEW_LARGE_TOOLBAR, &CMainFrame::OnViewLargeToolBar)
     ON_UPDATE_COMMAND_UI(ID_VIEW_LARGE_TOOLBAR, &CMainFrame::OnUpdateViewLargeToolBar)
     ON_COMMAND_RANGE(ID_TOOLS_SHADOW_COPY_BASE, ID_TOOLS_SHADOW_COPY_BASE + wds::alphaSize, &CMainFrame::OnAdvancedShadowCopy)
     ON_COMMAND_RANGE(ID_TOOLS_DEFRAG_BASE, ID_TOOLS_DEFRAG_BASE + wds::alphaSize, &CMainFrame::OnAdvancedDefrag)
     ON_COMMAND_RANGE(ID_TOOLS_CHKDSK_BASE, ID_TOOLS_CHKDSK_BASE + wds::alphaSize, &CMainFrame::OnAdvancedChkdsk)
     ON_COMMAND(ID_TOOLS_WATCHER, &CMainFrame::OnToolsWatcher)
+    ON_COMMAND(ID_DIFF_COMPARE, &CMainFrame::OnDiffCompare)
+    ON_UPDATE_COMMAND_UI(ID_DIFF_COMPARE, &CMainFrame::OnUpdateDiffCompare)
 END_MESSAGE_MAP()
 
 constexpr auto ID_STATUSPANE_IDLE_INDEX = 0;
@@ -1513,4 +1519,107 @@ void CMainFrame::OnToolsWatcher()
     {
         GetFileTabbedView()->SetActiveWatcherView();
     }
+}
+
+void CMainFrame::PerformDiffComparison(CItem* newRoot)
+{
+    CItem* currentRoot = CDirStatDoc::Get()->GetRootItem();
+    if (!currentRoot || !newRoot)
+    {
+        AfxMessageBox(L"Failed to load the comparison file.");
+        return;
+    }
+
+    std::vector<DiffEntry> entries = CDiffEngine::ComputeDiff(currentRoot, newRoot);
+
+    // Clear raw item pointers from entries - only name/size/type data is needed for display
+    for (auto& entry : entries)
+    {
+        entry.oldItem = nullptr;
+        entry.newItem = nullptr;
+    }
+
+    const DiffSummary summary = CDiffEngine::ComputeSummary(entries);
+
+    GetFileDiffView()->GetDiffControl().LoadDiff(entries);
+    GetFileTabbedView()->SetDiffTabVisibility(true);
+    GetFileTabbedView()->SetActiveDiffView();
+
+    CString statusMsg;
+    statusMsg.Format(L"Diff: Added %d (+%llu B), Removed %d (-%llu B), Changed %d",
+        summary.addedCount, summary.addedBytes,
+        summary.removedCount, summary.removedBytes,
+        summary.sizeChangedCount);
+    m_wndStatusBar.SetPaneText(ID_STATUSPANE_IDLE_INDEX, statusMsg);
+}
+
+void CMainFrame::OnDiffCompare()
+{
+    CItem* currentRoot = CDirStatDoc::Get()->GetRootItem();
+    if (!currentRoot)
+    {
+        AfxMessageBox(L"No current analysis to compare against.");
+        return;
+    }
+
+    constexpr wchar_t mapFileSelectString[] =
+        L"Map Files (*.map)|*.map|"
+        L"All Files (*.*)|*.*||";
+    constexpr wchar_t elfFileSelectString[] =
+        L"ELF Files (*.elf;*.)|*.elf;*.|"
+        L"All Files (*.*)|*.*||";
+    constexpr wchar_t mapDialogTitle[] = L"Step 1/2: Select comparison MAP file";
+    constexpr wchar_t elfDialogTitle[] = L"Step 2/2: Select comparison ELF file (optional)";
+
+    CFileDialog mapDlg(TRUE, L"map", nullptr,
+        OFN_EXPLORER | OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST,
+        mapFileSelectString);
+    mapDlg.GetOFN().lpstrTitle = mapDialogTitle;
+
+    if (mapDlg.DoModal() != IDOK)
+    {
+        return;
+    }
+
+    const std::wstring mapPath = mapDlg.GetPathName().GetString();
+    std::optional<std::wstring> elfPath;
+
+    const auto mapFilesystemPath = std::filesystem::path(mapPath);
+    const auto defaultElfPath = mapFilesystemPath.parent_path() / mapFilesystemPath.stem();
+    CFileDialog elfDlg(TRUE, L"elf", defaultElfPath.wstring().c_str(),
+        OFN_EXPLORER | OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST,
+        elfFileSelectString);
+    elfDlg.GetOFN().lpstrTitle = elfDialogTitle;
+
+    if (elfDlg.DoModal() == IDOK)
+    {
+        elfPath = elfDlg.GetPathName().GetString();
+    }
+
+    const auto regions = GetMapRegions(mapPath);
+    std::optional<std::wstring> selectedRegion;
+    if (!regions.empty())
+    {
+        CSelectRegionDlg regionDlg(regions, AfxGetMainWnd());
+        if (regionDlg.DoModal() != IDOK)
+        {
+            return;
+        }
+        selectedRegion = regionDlg.GetSelectedRegion();
+    }
+
+    CItem* newRoot = LoadMapResults(mapPath, elfPath, selectedRegion);
+    if (newRoot == nullptr)
+    {
+        DisplayError(L"Could not parse the selected comparison MAP/ELF files.");
+        return;
+    }
+
+    PerformDiffComparison(newRoot);
+    delete newRoot;
+}
+
+void CMainFrame::OnUpdateDiffCompare(CCmdUI* pCmdUI)
+{
+    pCmdUI->Enable(CDirStatDoc::Get()->GetRootItem() != nullptr);
 }

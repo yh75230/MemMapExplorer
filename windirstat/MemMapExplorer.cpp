@@ -382,15 +382,15 @@ BOOL CDirStatApp::InitInstance()
         RunElevated(m_lpCmdLine);
     }
 
+    // Initialize COM and common controls before CWinAppEx::InitInstance()
+    (void)CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    constexpr INITCOMMONCONTROLSEX ctrls = { sizeof(INITCOMMONCONTROLSEX) , ICC_STANDARD_CLASSES | ICC_BAR_CLASSES };
+    (void)InitCommonControlsEx(&ctrls);
+    (void)AfxInitRichEdit2();
+
     // Set app to prefer dark mode
     DarkMode::SetAppDarkMode();
     CWinAppEx::InitInstance();
-
-    // Initialize visual controls
-    constexpr INITCOMMONCONTROLSEX ctrls = { sizeof(INITCOMMONCONTROLSEX) , ICC_STANDARD_CLASSES };
-    (void)CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    (void)InitCommonControlsEx(&ctrls);
-    (void)AfxInitRichEdit2();
 
     // Initialize GDI Plus
     const Gdiplus::GdiplusStartupInput gdiplusStartupInput;

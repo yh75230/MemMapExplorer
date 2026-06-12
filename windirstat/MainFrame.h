@@ -166,9 +166,12 @@ protected:
     CFileDupeView* GetFileDupeView() const { return m_fileTabbedView->GetFileDupeView(); }
     CFileSearchView* GetFileSearchView() const { return m_fileTabbedView->GetFileSearchView(); }
     CFileWatcherView* GetFileWatcherView() const { return m_fileTabbedView->GetFileWatcherView(); }
+    CFileDiffView* GetFileDiffView() const { return m_fileTabbedView->GetFileDiffView(); }
     CFileTabbedView* GetFileTabbedView() const { return m_fileTabbedView; }
     CTreeMapView* GetTreeMapView() const { return m_treeMapView; }
     CExtensionView* GetExtensionView() const { return m_extensionView; }
+
+    void PerformDiffComparison(CItem* newRoot);
 
     void CreateProgress(ULONGLONG range);
     void SetProgressComplete();
@@ -248,6 +251,7 @@ protected:
     afx_msg void OnViewLargestFiles() { GetFileTabbedView()->SetActiveTopView(); }
     afx_msg void OnViewDuplicateFiles() { GetFileTabbedView()->SetActiveDupeView(); }
     afx_msg void OnViewSearchResults() { GetFileTabbedView()->SetActiveSearchView(); }
+    afx_msg void OnViewDiff() { GetFileTabbedView()->SetActiveDiffView(); }
     afx_msg void OnViewLargeToolBar();
     afx_msg void OnUpdateViewLargeToolBar(CCmdUI* pCmdUI);
     afx_msg void OnAdvancedShadowCopy(UINT nID);
@@ -255,6 +259,8 @@ protected:
     afx_msg void OnAdvancedChkdsk(UINT nID);
     afx_msg void OnToolsWatcher();
     void UpdateToolsMenu(CMenu* menu);
+    afx_msg void OnDiffCompare();
+    afx_msg void OnUpdateDiffCompare(CCmdUI* pCmdUI);
     afx_msg void OnConfigure();
     afx_msg void OnDestroy();
     afx_msg LRESULT OnTaskButtonCreated(WPARAM, LPARAM);

@@ -42,6 +42,8 @@ int CFileTabbedView::OnCreate(const LPCREATESTRUCT lpCreateStruct)
     m_fileSearchView = DYNAMIC_DOWNCAST(CFileSearchView, GetTabControl().GetTabWnd(m_fileSearchViewIndex));
     m_fileWatcherViewIndex = AddView(RUNTIME_CLASS(CFileWatcherView), IDS_WATCHER.data(), CHAR_MAX);
     m_fileWatcherView = DYNAMIC_DOWNCAST(CFileWatcherView, GetTabControl().GetTabWnd(m_fileWatcherViewIndex));
+    m_fileDiffViewIndex = AddView(RUNTIME_CLASS(CFileDiffView), IDS_DIFF.data(), CHAR_MAX);
+    m_fileDiffView = DYNAMIC_DOWNCAST(CFileDiffView, GetTabControl().GetTabWnd(m_fileDiffViewIndex));
 
     return 0;
 }
@@ -55,6 +57,7 @@ void CFileTabbedView::OnInitialUpdate()
 
     SetSearchTabVisibility(false);
     SetWatcherTabVisibility(false);
+    SetDiffTabVisibility(false);
     SetDupeTabVisibility(COptions::ScanForDuplicates &&
         CDirStatDoc::Get()->GetRootItem() != nullptr);
 }
@@ -74,6 +77,11 @@ void CFileTabbedView::SetWatcherTabVisibility(const bool show)
     GetTabControl().ShowTab(m_fileWatcherViewIndex, show);
     if (show) CFileWatcherControl::Get()->StartMonitoring();
     else CFileWatcherControl::Get()->StopMonitoring();
+}
+
+void CFileTabbedView::SetDiffTabVisibility(const bool show)
+{
+    GetTabControl().ShowTab(m_fileDiffViewIndex, show);
 }
 
 BOOL CFileTabbedView::OnEraseBkgnd(CDC* /*pDC*/)
@@ -96,7 +104,7 @@ LRESULT CFileTabbedView::OnChangeActiveTab(WPARAM wp, LPARAM lp)
 bool CFileTabbedView::CycleTab(const bool forward)
 {
     std::vector<int> visibleTabs;
-    for (const int tabIndex : { m_fileTreeViewIndex, m_fileTopViewIndex, m_fileDupeViewIndex, m_fileSearchViewIndex, m_fileWatcherViewIndex })
+    for (const int tabIndex : { m_fileTreeViewIndex, m_fileTopViewIndex, m_fileDupeViewIndex, m_fileSearchViewIndex, m_fileWatcherViewIndex, m_fileDiffViewIndex })
     {
         if (GetTabControl().IsTabVisible(tabIndex)) visibleTabs.push_back(tabIndex);
     }

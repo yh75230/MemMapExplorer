@@ -224,6 +224,9 @@
 #define ID_TREEMAP_SHOW_EXTENSIONS      32941
 #define ID_VIEW_LARGE_TOOLBAR           32942
 #define ID_FILTER_EXCLUDE_ITEM          32943
+#define ID_VIEW_DIFF                    32944
+#define ID_DIFF_LOAD_BASELINE           32945
+#define ID_DIFF_COMPARE                 32946
 #define IDS_AUTHOR_EMAIL                57345
 #define IDS_URL_WEBSITE                 57346
 #define IDS_URL_HELP                    57347
