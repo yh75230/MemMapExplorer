@@ -1608,7 +1608,12 @@ void CMainFrame::OnDiffCompare()
         selectedRegion = regionDlg.GetSelectedRegion();
     }
 
-    CItem* newRoot = LoadMapResults(mapPath, elfPath, selectedRegion);
+    CItem* newRoot = nullptr;
+    CProgressDlg(0, true, AfxGetMainWnd(), [&](CProgressDlg* dlg)
+    {
+        newRoot = LoadMapResults(mapPath, elfPath, selectedRegion,
+            [dlg](const wchar_t* msg, int) { if (dlg) dlg->SetMessage(msg); });
+    }).DoModal();
     if (newRoot == nullptr)
     {
         DisplayError(L"Could not parse the selected comparison MAP/ELF files.");

@@ -276,6 +276,27 @@
       <Filter>Header Files\Core</Filter>
     </ClInclude>
     <ClInclude Include="Dialogs\SelectRegionDlg.h" />
+    <ClInclude Include="ItemAddress.h">
+      <Filter>Header Files\Core\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="ItemDiff.h">
+      <Filter>Header Files\Core\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="DiffEngine.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\FileAddressControl.h">
+      <Filter>Header Files\User Interface\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls\FileDiffControl.h">
+      <Filter>Header Files\User Interface\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="Views\FileAddressView.h">
+      <Filter>Header Files\User Interface\Views</Filter>
+    </ClInclude>
+    <ClInclude Include="Views\FileDiffView.h">
+      <Filter>Header Files\User Interface\Views</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dialogs\AboutDlg.cpp">
@@ -436,6 +457,27 @@
     </ClCompile>
     <ClCompile Include="Dialogs\SelectRegionDlg.cpp">
       <Filter>Source Files\User Interface\Dialogs</Filter>
+    </ClCompile>
+    <ClCompile Include="ItemAddress.cpp">
+      <Filter>Source Files\Core\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="ItemDiff.cpp">
+      <Filter>Source Files\Core\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="DiffEngine.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\FileAddressControl.cpp">
+      <Filter>Source Files\User Interface\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls\FileDiffControl.cpp">
+      <Filter>Source Files\User Interface\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="Views\FileAddressView.cpp">
+      <Filter>Source Files\User Interface\Views</Filter>
+    </ClCompile>
+    <ClCompile Include="Views\FileDiffView.cpp">
+      <Filter>Source Files\User Interface\Views</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

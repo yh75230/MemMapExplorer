@@ -484,6 +484,7 @@ POWERSHELL.EXE -NoLogo -ExecutionPolicy Unrestricted -NoProfile -File "$(Project
     <ClInclude Include="Controls\ExtensionListControl.h" />
     <ClInclude Include="Controls\FileDupeControl.h" />
     <ClInclude Include="Controls\FileTopControl.h" />
+    <ClInclude Include="Controls\FileAddressControl.h" />
     <ClInclude Include="Controls\FileTreeControl.h" />
     <ClInclude Include="Controls\FileWatcherControl.h" />
     <ClInclude Include="Controls\FileDiffControl.h" />
@@ -509,6 +510,7 @@ POWERSHELL.EXE -NoLogo -ExecutionPolicy Unrestricted -NoProfile -File "$(Project
     <ClInclude Include="ItemSearch.h" />
     <ClInclude Include="ItemTop.h" />
     <ClInclude Include="ItemDiff.h" />
+    <ClInclude Include="ItemAddress.h" />
     <ClInclude Include="DiffEngine.h" />
     <ClInclude Include="Pages\PageFiltering.h" />
     <ClInclude Include="res\LangStrings.h" />
@@ -541,6 +543,7 @@ POWERSHELL.EXE -NoLogo -ExecutionPolicy Unrestricted -NoProfile -File "$(Project
     <ClInclude Include="Views\FileTabbedView.h" />
     <ClInclude Include="Views\FileTreeView.h" />
     <ClInclude Include="Views\FileDiffView.h" />
+    <ClInclude Include="Views\FileAddressView.h" />
     <ClInclude Include="Views\TreeMapView.h" />
     <ClInclude Include="MemMapExplorer.h" />
     <ClInclude Include="Dialogs\AboutDlg.h" />
@@ -550,6 +553,7 @@ POWERSHELL.EXE -NoLogo -ExecutionPolicy Unrestricted -NoProfile -File "$(Project
     <ClCompile Include="Controls\ExtensionListControl.cpp" />
     <ClCompile Include="Controls\FileDupeControl.cpp" />
     <ClCompile Include="Controls\FileTopControl.cpp" />
+    <ClCompile Include="Controls\FileAddressControl.cpp" />
     <ClCompile Include="Controls\FileTreeControl.cpp" />
     <ClCompile Include="Controls\FileWatcherControl.cpp" />
     <ClCompile Include="Controls\FileDiffControl.cpp" />
@@ -583,6 +587,7 @@ POWERSHELL.EXE -NoLogo -ExecutionPolicy Unrestricted -NoProfile -File "$(Project
     <ClCompile Include="ItemSearch.cpp" />
     <ClCompile Include="ItemTop.cpp" />
     <ClCompile Include="ItemDiff.cpp" />
+    <ClCompile Include="ItemAddress.cpp" />
     <ClCompile Include="DiffEngine.cpp" />
     <ClCompile Include="Layout.cpp">
     </ClCompile>
@@ -615,6 +620,7 @@ POWERSHELL.EXE -NoLogo -ExecutionPolicy Unrestricted -NoProfile -File "$(Project
     <ClCompile Include="Views\FileTabbedView.cpp" />
     <ClCompile Include="Views\FileTreeView.cpp" />
     <ClCompile Include="Views\FileDiffView.cpp" />
+    <ClCompile Include="Views\FileAddressView.cpp" />
     <ClCompile Include="Views\TreeMapView.cpp" />
     <ClCompile Include="MemMapExplorer.cpp">
     </ClCompile>

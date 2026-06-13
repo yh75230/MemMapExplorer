@@ -38,6 +38,8 @@ public:
     bool IsCancelled() const noexcept { return m_cancelRequested.load(); }
     size_t Increment() noexcept { return ++m_current; }
     size_t GetTotal() const noexcept { return m_total; }
+    void SetMessage(const std::wstring& msg);
+    void SetPos(int pos);
 
 protected:
     enum : std::uint8_t { IDD = IDD_PROGRESS };
@@ -49,11 +51,14 @@ protected:
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg void OnCancel() override;
     afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+    afx_msg LRESULT OnUpdateMessage(WPARAM, LPARAM);
+    afx_msg LRESULT OnUpdatePos(WPARAM, LPARAM);
 
 private:
     void StartWorkerThread();
 
     std::wstring m_message;
+    std::mutex m_messageMutex;
     std::function<void(CProgressDlg*)> m_task;
 
     CStatic m_messageCtrl;
@@ -62,6 +67,7 @@ private:
 
     std::atomic<bool> m_cancelRequested = false;
     std::atomic<size_t> m_current = 0;
+    std::atomic<int> m_pendingPos = -1;
     const size_t m_total = 0;
     bool m_cancelled = false;
     const bool m_noCancel = false;
@@ -69,4 +75,6 @@ private:
     std::optional<std::jthread> m_workerThread;
     static constexpr UINT_PTR TIMER_ID = 1;
     static constexpr UINT TIMER_INTERVAL = 50; // Update every 50ms
+    static constexpr UINT WM_UPDATEMESSAGE = WM_APP + 1;
+    static constexpr UINT WM_UPDATEPOS = WM_APP + 2;
 };

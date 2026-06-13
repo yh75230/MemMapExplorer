@@ -20,6 +20,7 @@
 #include "FileTreeView.h"
 #include "TreeMapView.h"
 #include "FileTopControl.h"
+#include "FileAddressControl.h"
 #include "FileSearchControl.h"
 #include "FileWatcherControl.h"
 #include "FinderBasic.h"
@@ -195,6 +196,9 @@ BOOL CDirStatDoc::OnOpenDocument(CItem* newroot)
         CFileTopControl::Get()->ProcessTop(item);
     }
     CFileTopControl::Get()->SortItems();
+
+    // Populate the Hex Address View from the pre-built tree
+    CFileAddressControl::Get()->PopulateAddressList(m_rootItem);
 
     if (m_rootItem != nullptr && m_rootItem->IsDone())
     {
@@ -1211,14 +1215,15 @@ void CDirStatDoc::OnLoadResults()
     }
 
     CItem* newroot = nullptr;
-    CProgressDlg(0, true, AfxGetMainWnd(), [&](CProgressDlg*)
+    CProgressDlg(0, true, AfxGetMainWnd(), [&](CProgressDlg* dlg)
     {
         if (path.size() >= 4 && _wcsicmp(path.c_str() + path.size() - 4, L".map") == 0)
         {
             const auto elfPath = std::filesystem::path(path).replace_extension(L".elf").wstring();
             newroot = LoadMapResults(path,
                 std::filesystem::exists(std::filesystem::path(elfPath)) ? std::optional<std::wstring>(elfPath) : std::nullopt,
-                selectedRegion);
+                selectedRegion,
+                [dlg](const wchar_t* msg, int) { if (dlg) dlg->SetMessage(msg); });
             return;
         }
 

@@ -34,6 +34,7 @@ protected:
 
     ~CTreeMapView() override = default;
 
+public:
     void SuspendRecalculationDrawing(bool suspend);
     bool IsShowTreeMap() const;
     void ShowTreeMap(bool show);

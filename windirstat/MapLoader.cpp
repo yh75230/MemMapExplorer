@@ -615,33 +615,6 @@ struct ObjectBucket
     return nullptr;
 }
 
-void RemoveMapItemDetails(const CItem* root)
-{
-    if (root == nullptr)
-    {
-        return;
-    }
-
-    std::vector<const CItem*> stack{ root };
-    while (!stack.empty())
-    {
-        const auto* current = stack.back();
-        stack.pop_back();
-        g_mapItemDetails.erase(current);
-        g_mapItemSections.erase(current);
-
-        if (current->IsLeaf())
-        {
-            continue;
-        }
-
-        for (const auto* child : current->GetChildren())
-        {
-            stack.push_back(child);
-        }
-    }
-}
-
 [[nodiscard]] std::wstring SymbolBindLabel(const std::uint8_t bind)
 {
     switch (bind)
@@ -1936,11 +1909,12 @@ void RegisterDetails(CItem* item, MapItemDetails details)
     return child;
 }
 
-[[nodiscard]] CItem* CreateLeafChild(CItem* parent, const std::wstring& name, const ULONGLONG size)
+[[nodiscard]] CItem* CreateLeafChild(CItem* parent, const std::wstring& name, const ULONGLONG size, const ULONGLONG address = 0)
 {
     auto* child = new CItem(IT_FILE, name);
     child->SetAttributes(FILE_ATTRIBUTE_NORMAL);
     child->SetFlag(ITF_RESERVED);
+    child->SetIndex(address);
     child->SetSizePhysical(size);
     child->SetSizeLogical(size);
     child->ExtensionDataAdd();
@@ -2021,6 +1995,7 @@ void RemoveMapItemDetails(const CItem* root)
         const auto* current = stack.back();
         stack.pop_back();
         g_mapItemDetails.erase(current);
+        g_mapItemSections.erase(current);
 
         if (current->IsLeaf())
         {
@@ -2036,8 +2011,15 @@ void RemoveMapItemDetails(const CItem* root)
 
 CItem* LoadMapResults(const std::wstring& mapPath,
     const std::optional<std::wstring>& elfPath,
-    const std::optional<std::wstring>& selectedRegion)
+    const std::optional<std::wstring>& selectedRegion,
+    const std::function<void(const wchar_t*, int)>& progressCallback)
 {
+    auto reportProgress = [&](const wchar_t* msg, int percent)
+    {
+        if (progressCallback) progressCallback(msg, percent);
+    };
+
+    reportProgress(L"Loading map file...", 0);
     ClearMapItemDetails();
 
     const auto parsed = ParseMapFile(mapPath, selectedRegion);
@@ -2049,6 +2031,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
     const auto& sections = parsed.sections;
     const auto& selectedRegions = parsed.selectedRegions;
 
+    reportProgress(L"Loading ELF data...", 15);
     const auto elfData = ParseElfData(elfPath);
     const auto& symbols = elfData.symbols;
     std::unordered_map<std::wstring, std::vector<Symbol>, string_hash, std::equal_to<>> symbolsBySection;
@@ -2057,6 +2040,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
         symbolsBySection[symbol.sectionName].push_back(symbol);
     }
 
+    reportProgress(L"Building tree structure...", 40);
     const auto rootName = std::filesystem::path(mapPath).filename().wstring();
     auto* root = new CItem(IT_DIRECTORY | ITF_ROOTITEM, rootName);
     root->SetAttributes(FILE_ATTRIBUTE_DIRECTORY);
@@ -2143,7 +2127,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
             contributionRecords.push_back(&contribution);
         }
 
-        auto sectionSymbols = symbolsBySection[section.name];
+        auto sectionSymbols = std::move(symbolsBySection[section.name]);
         std::ranges::sort(sectionSymbols, [](const Symbol& left, const Symbol& right)
         {
             if (left.address != right.address) return left.address < right.address;
@@ -2253,7 +2237,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
                     });
                     for (const auto& symbol : symbolsForObject)
                     {
-                        auto* symbolNode = CreateLeafChild(objectNode, MakeSymbolLeafName(symbol), symbol.size);
+                        auto* symbolNode = CreateLeafChild(objectNode, MakeSymbolLeafName(symbol), symbol.size, symbol.address);
                         g_mapItemSections[symbolNode] = section.name;
                         const auto debugInfo = GetSymbolDebugInfo(symbol, elfData);
                         MapItemDetails symbolDetails{ .title = symbol.name };
@@ -2286,14 +2270,14 @@ CItem* LoadMapResults(const std::wstring& mapPath,
                     if (bucket->symbols.empty())
                     {
                         const auto label = MakeContributionLeafName(*contribution);
-                        auto* leafNode = CreateLeafChild(objectNode, label, contribution->size);
+                        auto* leafNode = CreateLeafChild(objectNode, label, contribution->size, contribution->address);
                         g_mapItemSections[leafNode] = section.name;
                         addedContributionLeaf = true;
                     }
                     else if (remainder > 0)
                     {
                         const auto label = MakeResidualLeafName(contribution->subsection, contribution->address);
-                        auto* leafNode = CreateLeafChild(objectNode, label, remainder);
+                        auto* leafNode = CreateLeafChild(objectNode, label, remainder, contribution->address);
                         g_mapItemSections[leafNode] = section.name;
                     }
                 }
@@ -2325,10 +2309,14 @@ CItem* LoadMapResults(const std::wstring& mapPath,
             auto* objectNode = CreateDirectoryChild(libraryNode, L"[section payload]");
             g_mapItemSections[objectNode] = section.name;
             const std::wstring leafName = MakeSectionResidualLeafName(section.name);
-            auto* leafNode = CreateLeafChild(objectNode, leafName, section.size - accounted);
+            auto* leafNode = CreateLeafChild(objectNode, leafName, section.size - accounted, section.address + accounted);
             g_mapItemSections[leafNode] = section.name;
         }
     };
+
+    int totalSections = 0;
+    for (const auto& rb : regionBuckets) totalSections += static_cast<int>(rb.sections.size());
+    int processedSections = 0;
 
     for (const auto& regionBucket : regionBuckets)
     {
@@ -2355,6 +2343,9 @@ CItem* LoadMapResults(const std::wstring& mapPath,
         for (const auto* section : regionBucket.sections)
         {
             buildSectionNode(regionNode, *section);
+            processedSections++;
+            const int percent = 40 + (processedSections * 50 / std::max(totalSections, 1));
+            reportProgress(L"Building tree structure...", percent);
         }
 
         if (regionBucket.region != nullptr && usedBytes < regionBucket.region->length)
@@ -2363,6 +2354,7 @@ CItem* LoadMapResults(const std::wstring& mapPath,
         }
     }
 
+    reportProgress(L"Finalizing...", 90);
     FinalizeTree(root);
     return root;
 }

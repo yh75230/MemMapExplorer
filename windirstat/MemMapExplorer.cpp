@@ -22,6 +22,7 @@
 #include "TreeMapView.h"
 #include "CsvLoader.h"
 #include "MapLoader.h"
+#include "ProgressDlg.h"
 
 namespace
 {
@@ -56,7 +57,13 @@ CItem* LoadImportedTree(const std::wstring& path)
             }
             selectedRegion = regionDlg.GetSelectedRegion();
         }
-        return LoadMapResults(path, std::nullopt, selectedRegion);
+        CItem* result = nullptr;
+        CProgressDlg(0, true, AfxGetMainWnd(), [&](CProgressDlg* dlg)
+        {
+            result = LoadMapResults(path, std::nullopt, selectedRegion,
+                [dlg](const wchar_t* msg, int) { if (dlg) dlg->SetMessage(msg); });
+        }).DoModal();
+        return result;
     }
     if (HasExtensionInsensitive(path, L".elf"))
     {
@@ -78,7 +85,13 @@ CItem* LoadImportedTree(const std::wstring& path)
             }
             selectedRegion = regionDlg.GetSelectedRegion();
         }
-        return LoadMapResults(mapPath.wstring(), path, selectedRegion);
+        CItem* result = nullptr;
+        CProgressDlg(0, true, AfxGetMainWnd(), [&](CProgressDlg* dlg)
+        {
+            result = LoadMapResults(mapPath.wstring(), path, selectedRegion,
+                [dlg](const wchar_t* msg, int) { if (dlg) dlg->SetMessage(msg); });
+        }).DoModal();
+        return result;
     }
     return LoadResults(path);
 }
@@ -552,7 +565,11 @@ void CDirStatApp::OnFileOpen()
             selectedRegion = regionDlg.GetSelectedRegion();
         }
 
-        newroot = LoadMapResults(mapPath, elfPath, selectedRegion);
+        CProgressDlg(0, true, AfxGetMainWnd(), [&](CProgressDlg* dlg)
+        {
+            newroot = LoadMapResults(mapPath, elfPath, selectedRegion,
+                [dlg](const wchar_t* msg, int) { if (dlg) dlg->SetMessage(msg); });
+        }).DoModal();
     }
 
     if (newroot == nullptr)

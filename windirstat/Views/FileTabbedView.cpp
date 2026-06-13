@@ -18,6 +18,10 @@
 #include "pch.h"
 #include "FileTabbedView.h"
 #include "FileTreeView.h"
+#include "DirStatDoc.h"
+#include "Item.h"
+#include "MainFrame.h"
+#include "TreeMapView.h"
 
 IMPLEMENT_DYNCREATE(CFileTabbedView, CTabView)
 
@@ -44,6 +48,8 @@ int CFileTabbedView::OnCreate(const LPCREATESTRUCT lpCreateStruct)
     m_fileWatcherView = DYNAMIC_DOWNCAST(CFileWatcherView, GetTabControl().GetTabWnd(m_fileWatcherViewIndex));
     m_fileDiffViewIndex = AddView(RUNTIME_CLASS(CFileDiffView), IDS_DIFF.data(), CHAR_MAX);
     m_fileDiffView = DYNAMIC_DOWNCAST(CFileDiffView, GetTabControl().GetTabWnd(m_fileDiffViewIndex));
+    m_fileAddressViewIndex = AddView(RUNTIME_CLASS(CFileAddressView), IDS_HEX_ADDRESS_VIEW.data(), CHAR_MAX);
+    m_fileAddressView = DYNAMIC_DOWNCAST(CFileAddressView, GetTabControl().GetTabWnd(m_fileAddressViewIndex));
 
     return 0;
 }
@@ -104,7 +110,7 @@ LRESULT CFileTabbedView::OnChangeActiveTab(WPARAM wp, LPARAM lp)
 bool CFileTabbedView::CycleTab(const bool forward)
 {
     std::vector<int> visibleTabs;
-    for (const int tabIndex : { m_fileTreeViewIndex, m_fileTopViewIndex, m_fileDupeViewIndex, m_fileSearchViewIndex, m_fileWatcherViewIndex, m_fileDiffViewIndex })
+    for (const int tabIndex : { m_fileTreeViewIndex, m_fileTopViewIndex, m_fileDupeViewIndex, m_fileSearchViewIndex, m_fileWatcherViewIndex, m_fileDiffViewIndex, m_fileAddressViewIndex })
     {
         if (GetTabControl().IsTabVisible(tabIndex)) visibleTabs.push_back(tabIndex);
     }

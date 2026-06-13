@@ -73,6 +73,7 @@ constexpr std::wstring_view IDS_GENERIC_OK = L"IDS_GENERIC_OK";
 constexpr std::wstring_view IDS_GENERIC_YES = L"IDS_GENERIC_YES";
 constexpr std::wstring_view IDS_HARDLINKS_ITEM = L"IDS_HARDLINKS_ITEM";
 constexpr std::wstring_view IDS_HELP_MANUAL = L"IDS_HELP_MANUAL";
+constexpr std::wstring_view IDS_HEX_ADDRESS_VIEW = L"IDS_HEX_ADDRESS_VIEW";
 constexpr std::wstring_view IDS_HIDDEN = L"IDS_HIDDEN";
 constexpr std::wstring_view IDS_IDLEMESSAGE = L"IDS_IDLEMESSAGE";
 constexpr std::wstring_view IDS_JUNCTIONS = L"IDS_JUNCTIONS";

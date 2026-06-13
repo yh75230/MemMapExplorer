@@ -29,10 +29,53 @@ CProgressDlg::CProgressDlg(const size_t total, const bool noCancel, CWnd* pParen
 {
 }
 
+void CProgressDlg::SetMessage(const std::wstring& msg)
+{
+    std::scoped_lock guard(m_messageMutex);
+    m_message = msg;
+    PostMessage(WM_UPDATEMESSAGE);
+}
+
+void CProgressDlg::SetPos(int pos)
+{
+    m_current.store(static_cast<size_t>(pos));
+    PostMessage(WM_UPDATEMESSAGE);
+}
+
+LRESULT CProgressDlg::OnUpdateMessage(WPARAM, LPARAM)
+{
+    std::wstring msg;
+    {
+        std::scoped_lock guard(m_messageMutex);
+        msg = m_message;
+    }
+    m_messageCtrl.SetWindowText(msg.c_str());
+    return 0;
+}
+
+LRESULT CProgressDlg::OnUpdatePos(WPARAM, LPARAM)
+{
+    const int pos = m_pendingPos.exchange(-1);
+    if (pos >= 0)
+    {
+        m_progressCtrl.SetPos(pos);
+        std::wstring msg;
+        {
+            std::scoped_lock guard(m_messageMutex);
+            msg = m_message;
+        }
+        const std::wstring progressText = std::format(L"{}: {}%", msg, pos);
+        m_messageCtrl.SetWindowText(progressText.c_str());
+    }
+    return 0;
+}
+
 BEGIN_MESSAGE_MAP(CProgressDlg, CDialogEx)
     ON_WM_TIMER()
     ON_WM_CTLCOLOR()
     ON_BN_CLICKED(IDCANCEL, OnCancel)
+    ON_MESSAGE(WM_UPDATEMESSAGE, OnUpdateMessage)
+    ON_MESSAGE(WM_UPDATEPOS, OnUpdatePos)
 END_MESSAGE_MAP()
 
 void CProgressDlg::DoDataExchange(CDataExchange* pDX)
@@ -104,8 +147,21 @@ void CProgressDlg::OnTimer(UINT_PTR nIDEvent)
         m_progressCtrl.SetPos(static_cast<int>((m_current.load() * 100) / m_total));
 
         // Update message with progress
-        const std::wstring progressText = std::format(L"{}: {} / {}",
-            m_message, FormatCount(m_current.load()), FormatCount(m_total));
+        std::wstring msg;
+        {
+            std::scoped_lock guard(m_messageMutex);
+            msg = m_message;
+        }
+        std::wstring progressText;
+        if (m_total == 100)
+        {
+            progressText = std::format(L"{}: {}%", msg, m_current.load());
+        }
+        else
+        {
+            progressText = std::format(L"{}: {} / {}",
+                msg, FormatCount(m_current.load()), FormatCount(m_total));
+        }
         m_messageCtrl.SetWindowText(progressText.c_str());
     }
     CDialogEx::OnTimer(nIDEvent);

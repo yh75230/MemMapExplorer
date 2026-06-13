@@ -71,6 +71,7 @@ IDS_GENERIC_OK=&OK
 IDS_GENERIC_YES=&Yes
 IDS_HARDLINKS_ITEM=<Hardlinks>
 IDS_HELP_MANUAL=Open the MemMap Explorer Online Help.\nManual
+IDS_HEX_ADDRESS_VIEW=Hex Address View
 IDS_HIDDEN=Hidden
 IDS_IDLEMESSAGE=Ready
 IDS_JUNCTIONS=Junctions

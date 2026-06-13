@@ -20,6 +20,7 @@
 #include "pch.h"
 #include "FileTreeView.h"
 #include "FileDiffView.h"
+#include "FileAddressView.h"
 
 class CFileTabbedView final : public CTabView
 {
@@ -30,18 +31,21 @@ public:
     bool IsFileSearchViewTabActive() { return GetTabControl().GetActiveTab() == m_fileSearchViewIndex; }
     bool IsFileWatcherViewTabActive() { return GetTabControl().GetActiveTab() == m_fileWatcherViewIndex; }
     bool IsFileDiffViewTabActive() { return GetTabControl().GetActiveTab() == m_fileDiffViewIndex; }
+    bool IsFileAddressViewTabActive() { return GetTabControl().GetActiveTab() == m_fileAddressViewIndex; }
     CFileTopView* GetFileTopView() const { return m_fileTopView; }
     CFileTreeView* GetFileTreeView() const { return m_fileTreeView; }
     CFileDupeView* GetFileDupeView() const { return m_fileDupeView; }
     CFileSearchView* GetFileSearchView() const { return m_fileSearchView; }
     CFileWatcherView* GetFileWatcherView() const { return m_fileWatcherView; }
     CFileDiffView* GetFileDiffView() const { return m_fileDiffView; }
+    CFileAddressView* GetFileAddressView() const { return m_fileAddressView; }
     void SetActiveFileTreeView() { SetActiveView(m_fileTreeViewIndex); }
     void SetActiveTopView() { SetActiveView(m_fileTopViewIndex); }
     void SetActiveDupeView() { SetActiveView(m_fileDupeViewIndex); }
     void SetActiveSearchView() { SetActiveView(m_fileSearchViewIndex); }
     void SetActiveWatcherView() { SetActiveView(m_fileWatcherViewIndex); }
     void SetActiveDiffView() { SetActiveView(m_fileDiffViewIndex); }
+    void SetActiveAddressView() { SetActiveView(m_fileAddressViewIndex); }
     void SetDupeTabVisibility(bool show = true);
     void SetSearchTabVisibility(bool show = true);
     void SetWatcherTabVisibility(bool show = true);
@@ -71,6 +75,8 @@ protected:
     CFileWatcherView* m_fileWatcherView = nullptr;
     int m_fileDiffViewIndex = -1;
     CFileDiffView* m_fileDiffView = nullptr;
+    int m_fileAddressViewIndex = -1;
+    CFileAddressView* m_fileAddressView = nullptr;
 
     DECLARE_MESSAGE_MAP()
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
